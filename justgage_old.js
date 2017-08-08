@@ -1,3 +1,10 @@
+/**
+ * JustGage - animated gauges using RaphaelJS
+ * Check http://www.justgage.com for official releases
+ * Licensed under MIT.
+ * @author Bojan Djuricic (@Toorshia)
+ **/
+
 JustGage = function(config) {
 
     var obj = this;
@@ -58,22 +65,6 @@ JustGage = function(config) {
         // gauge height
         height: kvLookup('height', config, dataset, null),
 
-        // title : string
-        // gauge title
-        title: kvLookup('title', config, dataset, ""),
-
-        // titleFontColor : string
-        // color of gauge title
-        titleFontColor: kvLookup('titleFontColor', config, dataset, "#999999"),
-
-        // titleFontFamily : string
-        // color of gauge title
-        titleFontFamily: kvLookup('titleFontFamily', config, dataset, "sans-serif"),
-
-        // titlePosition : string
-        // 'above' or 'below'
-        titlePosition: kvLookup('titlePosition', config, dataset, "above"),
-
         // valueFontColor : string
         // color of label showing current value
         valueFontColor: kvLookup('valueFontColor', config, dataset, "#010101"),
@@ -94,17 +85,13 @@ JustGage = function(config) {
         // max value
         max: kvLookup('max', config, dataset, 100, 'float'),
 
-        // reverse : bool
-        // reverse min and max
-        reverse: kvLookup('reverse', config, dataset, false),
-
-        // humanFriendlyDecimal : int
-        // number of decimal places for our human friendly number to contain
-        humanFriendlyDecimal: kvLookup('humanFriendlyDecimal', config, dataset, 0),
-
         // textRenderer: func
         // function applied before rendering text
         textRenderer: kvLookup('textRenderer', config, dataset, null),
+
+        // onAnimationEnd: func
+        // function applied after animation is done
+        onAnimationEnd: kvLookup('onAnimationEnd', config, dataset, null),
 
         // gaugeWidthScale : float
         // width of the gauge element
@@ -162,10 +149,6 @@ JustGage = function(config) {
         // absolute minimum font size for the value
         valueMinFontSize: kvLookup('valueMinFontSize', config, dataset, 16),
 
-        // titleMinFontSize
-        // absolute minimum font size for the title
-        titleMinFontSize: kvLookup('titleMinFontSize', config, dataset, 10),
-
         // labelMinFontSize
         // absolute minimum font size for the label
         labelMinFontSize: kvLookup('labelMinFontSize', config, dataset, 10),
@@ -186,9 +169,9 @@ JustGage = function(config) {
         // hide min and max values
         hideMinMax: kvLookup('hideMinMax', config, dataset, false),
 
-        // hideInnerShadow : bool
-        // hide inner shadow
-        hideInnerShadow: kvLookup('hideInnerShadow', config, dataset, false),
+        // showInnerShadow : bool
+        // show inner shadow
+        showInnerShadow: kvLookup('showInnerShadow', config, dataset, false),
 
         // humanFriendly : bool
         // convert large numbers for min, max, value to human friendly (e.g. 1234567 -> 1.23M)
@@ -236,9 +219,6 @@ JustGage = function(config) {
         aspect,
         dx,
         dy,
-        titleFontSize,
-        titleX,
-        titleY,
         valueFontSize,
         valueX,
         valueY,
@@ -264,21 +244,24 @@ JustGage = function(config) {
         obj.canvas = Raphael(obj.config.parentNode, "100%", "100%");
     }
 
-    if (obj.config.relativeGaugeSize === true) {
-        obj.canvas.setViewBox(0, 0, 200, 150, true);
-    }
-
     // canvas dimensions
     if (obj.config.relativeGaugeSize === true) {
-        canvasW = 200;
-        canvasH = 150;
+        if (obj.config.donut === true) {
+            obj.canvas.setViewBox(0, 0, 200, 200, true);
+            canvasW = 200;
+            canvasH = 200;
+        } else {
+            obj.canvas.setViewBox(0, 0, 200, 100, true);
+            canvasW = 200;
+            canvasH = 100;
+        }
     } else if (obj.config.width !== null && obj.config.height !== null) {
         canvasW = obj.config.width;
         canvasH = obj.config.height;
     } else if (obj.config.parentNode !== null) {
-        obj.canvas.setViewBox(0, 0, 200, 150, true);
+        obj.canvas.setViewBox(0, 0, 200, 100, true);
         canvasW = 200;
-        canvasH = 150;
+        canvasH = 100;
     } else {
         canvasW = getStyle(document.getElementById(obj.config.id), "width").slice(0, -2) * 1;
         canvasH = getStyle(document.getElementById(obj.config.id), "height").slice(0, -2) * 1;
@@ -286,25 +269,14 @@ JustGage = function(config) {
 
     // widget dimensions
     if (obj.config.donut === true) {
-
-        // DONUT *******************************
-
-        // width more than height
-        if (canvasW > canvasH) {
+        if (canvasW > canvasH) { // landscape
             widgetH = canvasH;
             widgetW = widgetH;
             // width less than height
-        } else if (canvasW < canvasH) {
+        } else if (canvasW < canvasH) { // portrait
             widgetW = canvasW;
             widgetH = widgetW;
-            // if height don't fit, rescale both
-            if (widgetH > canvasH) {
-                aspect = widgetH / canvasH;
-                widgetH = widgetH / aspect;
-                widgetW = widgetH / aspect;
-            }
-            // equal
-        } else {
+        } else { // square
             widgetW = canvasW;
             widgetH = widgetW;
         }
@@ -312,11 +284,6 @@ JustGage = function(config) {
         // delta
         dx = (canvasW - widgetW) / 2;
         dy = (canvasH - widgetH) / 2;
-
-        // title
-        titleFontSize = ((widgetH / 8) > 10) ? (widgetH / 10) : 10;
-        titleX = dx + widgetW / 2;
-        titleY = dy + widgetH / 11;
 
         // value
         valueFontSize = ((widgetH / 6.4) > 16) ? (widgetH / 5.4) : 18;
@@ -341,48 +308,26 @@ JustGage = function(config) {
         maxFontSize = ((widgetH / 16) > 10) ? (widgetH / 16) : 10;
         maxX = dx + widgetW - (widgetW / 10) - (widgetW / 6.666666666666667 * obj.config.gaugeWidthScale) / 2;
         maxY = labelY;
-
     } else {
-        // HALF *******************************
-
-        // width more than height
-        if (canvasW > canvasH) {
+        if (canvasW > canvasH) { // landscape
             widgetH = canvasH;
-            widgetW = widgetH * 1.25;
-            //if width doesn't fit, rescale both
-            if (widgetW > canvasW) {
+            widgetW = widgetH * 2;
+            if (widgetW > canvasW) { //if width doesn't fit, rescale both
                 aspect = widgetW / canvasW;
                 widgetW = widgetW / aspect;
                 widgetH = widgetH / aspect;
             }
-            // width less than height
-        } else if (canvasW < canvasH) {
+        } else if (canvasW < canvasH) { // portrait
             widgetW = canvasW;
-            widgetH = widgetW / 1.25;
-            // if height don't fit, rescale both
-            if (widgetH > canvasH) {
-                aspect = widgetH / canvasH;
-                widgetH = widgetH / aspect;
-                widgetW = widgetH / aspect;
-            }
-            // equal
-        } else {
+            widgetH = widgetW / 2;
+        } else { // square
             widgetW = canvasW;
-            widgetH = widgetW * 0.75;
+            widgetH = widgetW * 0.5;
         }
 
         // delta
         dx = (canvasW - widgetW) / 2;
         dy = (canvasH - widgetH) / 2;
-        if (obj.config.titlePosition === 'below') {
-            // shift whole thing down
-            dy -= (widgetH / 6.4);
-        }
-
-        // title
-        titleFontSize = ((widgetH / 8) > obj.config.titleMinFontSize) ? (widgetH / 10) : obj.config.titleMinFontSize;
-        titleX = dx + widgetW / 2;
-        titleY = dy + (obj.config.titlePosition === 'below' ? (widgetH * 1.07) : (widgetH / 6.4));
 
         // value
         valueFontSize = ((widgetH / 6.5) > obj.config.valueMinFontSize) ? (widgetH / 6.5) : obj.config.valueMinFontSize;
@@ -413,9 +358,6 @@ JustGage = function(config) {
         widgetH: widgetH,
         dx: dx,
         dy: dy,
-        titleFontSize: titleFontSize,
-        titleX: titleX,
-        titleY: titleY,
         valueFontSize: valueFontSize,
         valueX: valueX,
         valueY: valueY,
@@ -431,7 +373,7 @@ JustGage = function(config) {
     };
 
     // var clear
-    canvasW, canvasH, widgetW, widgetH, aspect, dx, dy, titleFontSize, titleX, titleY, valueFontSize, valueX, valueY, labelFontSize, labelX, labelY, minFontSize, minX, minY, maxFontSize, maxX, maxY = null;
+    canvasW, canvasH, widgetW, widgetH, aspect, dx, dy, valueFontSize, valueX, valueY, labelFontSize, labelX, labelY, minFontSize, minX, minY, maxFontSize, maxX, maxY = null;
 
     // pki - custom attribute for generating gauge paths
     obj.canvas.customAttributes.pki = function(value, min, max, w, h, dx, dy, gws, donut, reverse) {
@@ -440,16 +382,16 @@ JustGage = function(config) {
 
         if (donut) {
             alpha = (1 - 2 * (value - min) / (max - min)) * Math.PI;
-            Ro = w / 2 - w / 7;
+            Ro = w / 2 - w / 30;
             Ri = Ro - w / 6.666666666666667 * gws;
 
             Cx = w / 2 + dx;
-            Cy = h / 1.95 + dy;
+            Cy = h / 2 + dy;
 
-            Xo = w / 2 + dx + Ro * Math.cos(alpha);
-            Yo = h - (h - Cy) - Ro * Math.sin(alpha);
-            Xi = w / 2 + dx + Ri * Math.cos(alpha);
-            Yi = h - (h - Cy) - Ri * Math.sin(alpha);
+            Xo = Cx + Ro * Math.cos(alpha);
+            Yo = Cy - Ro * Math.sin(alpha);
+            Xi = Cx + Ri * Math.cos(alpha);
+            Yi = Cy - Ri * Math.sin(alpha);
 
             path = "M" + (Cx - Ri) + "," + Cy + " ";
             path += "L" + (Cx - Ro) + "," + Cy + " ";
@@ -467,7 +409,6 @@ JustGage = function(config) {
             return {
                 path: path
             };
-
         } else {
             alpha = (1 - (value - min) / (max - min)) * Math.PI;
             Ro = w / 2 - w / 10;
@@ -476,10 +417,15 @@ JustGage = function(config) {
             Cx = w / 2 + dx;
             Cy = h / 1.25 + dy;
 
-            Xo = w / 2 + dx + Ro * Math.cos(alpha);
-            Yo = h - (h - Cy) - Ro * Math.sin(alpha);
-            Xi = w / 2 + dx + Ri * Math.cos(alpha);
-            Yi = h - (h - Cy) - Ri * Math.sin(alpha);
+            // Xo = w / 2 + dx + Ro * Math.cos(alpha);
+            // Yo = h - (h - Cy) - Ro * Math.sin(alpha);
+            // Xi = w / 2 + dx + Ri * Math.cos(alpha);
+            // Yi = h - (h - Cy) - Ri * Math.sin(alpha);
+
+            Xo = Cx + Ro * Math.cos(alpha);
+            Yo = Cy - Ro * Math.sin(alpha);
+            Xi = Cx + Ri * Math.cos(alpha);
+            Yi = Cy - Ri * Math.sin(alpha);
 
             path = "M" + (Cx - Ri) + "," + Cy + " ";
             path += "L" + (Cx - Ro) + "," + Cy + " ";
@@ -513,11 +459,11 @@ JustGage = function(config) {
         if (donut) {
 
             alpha = (1 - 2 * (value - min) / (max - min)) * Math.PI;
-            Ro = w / 2 - w / 7;
+            Ro = w / 2 - w / 30;
             Ri = Ro - w / 6.666666666666667 * gws;
 
             Cx = w / 2 + dx;
-            Cy = h / 1.95 + dy;
+            Cy = h / 2 + dy;
 
             Xo = w / 2 + dx + Ro * Math.cos(alpha);
             Yo = h - (h - Cy) - Ro * Math.sin(alpha);
@@ -583,7 +529,7 @@ JustGage = function(config) {
     // gauge
     obj.gauge = obj.canvas.path().attr({
         "stroke": "black",
-        "stroke_width": 0.1,
+        "stroke-width": 0.2,
         "fill": obj.config.gaugeColor,
         pki: [
             obj.config.max,
@@ -602,7 +548,7 @@ JustGage = function(config) {
     // level
     obj.level = obj.canvas.path().attr({
         "stroke": "black",
-        "stroke_width": 0.1,
+        "stroke-width": 0.1,
         "fill": getColor(obj.config.value, (obj.config.value - obj.config.min) / (obj.config.max - obj.config.min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors),
         pki: [
             obj.config.min,
@@ -618,7 +564,7 @@ JustGage = function(config) {
         ]
     });
     if (obj.config.donut) {
-        obj.level.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
+        obj.level.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 2 + obj.params.dy));
     }
 
     if (obj.config.pointer) {
@@ -642,21 +588,9 @@ JustGage = function(config) {
         });
 
         if (obj.config.donut) {
-            obj.needle.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
+            obj.needle.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 2 + obj.params.dy));
         }
-
     }
-
-    // title
-    obj.titleLabelObject = obj.canvas.text(obj.params.titleX, obj.params.titleY, obj.config.title);
-    obj.titleLabelObject.attr({
-        "font-size": obj.params.titleFontSize,
-        "font-weight": "bold",
-        "font-family": obj.config.titleFontFamily,
-        "fill": obj.config.titleFontColor,
-        "fill-opacity": "1"
-    });
-    setDy(obj.titleLabelObject, obj.params.titleFontSize, obj.params.titleY);
 
     // value
     obj.txtValue = obj.canvas.text(obj.params.valueX, obj.params.valueY, 0);
@@ -680,27 +614,19 @@ JustGage = function(config) {
     });
     setDy(obj.txtLabel, obj.params.labelFontSize, obj.params.labelY);
 
-    // min
-    var min = obj.config.min;
-    if (obj.config.reverse) {
-        min = obj.config.max;
-    }
-
+    // Create min label and set value
     obj.minLabelObject = obj.canvas.text(obj.params.minX, obj.params.minY, obj.config.min);
     obj.minLabelObject.attr({
         "font-size": obj.params.minFontSize,
         "font-weight": "normal",
         "font-family": "Arial",
         "fill": obj.config.labelFontColor,
-        "fill-opacity": (obj.config.hideMinMax || obj.config.donut) ? "0" : "1"
+        "fill-opacity": (obj.config.hideMinMin || obj.config.donut) ? "0" : "1"
     });
     setDy(obj.minLabelObject, obj.params.minFontSize, obj.params.minY);
+    this.setNewMin(obj.config.min ? obj.config.min : 0)
 
-    // max
-    var max = obj.config.max;
-    if (obj.config.reverse) {
-        max = obj.config.min;
-    }
+    // Create max label and set value
     obj.maxLabelObject = obj.canvas.text(obj.params.maxX, obj.params.maxY, obj.config.max);
     obj.maxLabelObject.attr({
         "font-size": obj.params.maxFontSize,
@@ -710,6 +636,7 @@ JustGage = function(config) {
         "fill-opacity": (obj.config.hideMinMax || obj.config.donut) ? "0" : "1"
     });
     setDy(obj.maxLabelObject, obj.params.maxFontSize, obj.params.maxY);
+    this.setNewMax(obj.config.max ? obj.config.max : 0)
 
     var defs = obj.canvas.canvas.childNodes[1];
     var svg = "http://www.w3.org/2000/svg";
@@ -773,7 +700,7 @@ JustGage = function(config) {
             obj.config.donut,
             obj.config.reverse
         ]
-    }, obj.config.startAnimationTime, obj.config.startAnimationType);
+    }, obj.config.startAnimationTime, obj.config.startAnimationType, obj.config.onAnimationEnd);
 
     if (obj.config.pointer) {
         obj.needle.animate({
@@ -825,38 +752,26 @@ JustGage.prototype.setNewMax = function(max) {
     }
 }
 
-/** Refresh gauge level */
 JustGage.prototype.refresh = function(val) {
 
     var obj = this;
     var displayVal, color, max = max || null;
 
-    // overflow values
-    displayVal = val;
-    if ((val * 1) > (obj.config.max * 1)) {
-        val = (obj.config.max * 1);
-    }
-    if ((val * 1) < (obj.config.min * 1)) {
-        val = (obj.config.min * 1);
-    }
-
     color = getColor(val, (val - obj.config.min) / (obj.config.max - obj.config.min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors);
 
     displayVal = (displayVal * 1).toFixed(obj.config.decimals) + obj.config.symbol;
+
     obj.originalValue = displayVal;
     obj.config.value = val * 1;
 
     if (!obj.config.counter) {
-        obj.txtValue.attr({
-            "text": displayVal
-        });
+        obj.txtValue.attr({ "text": displayVal });
         setDy(obj.txtValue, obj.params.valueFontSize, obj.params.valueY);
     }
 
     var rvl = obj.config.value;
-    if (obj.config.reverse) {
-        rvl = (obj.config.max * 1) + (obj.config.min * 1) - (obj.config.value * 1);
-    }
+    if (obj.config.reverse) { rvl = (obj.config.max * 1) + (obj.config.min * 1) - (obj.config.value * 1); }
+
     obj.level.animate({
         pki: [
             rvl,
@@ -871,7 +786,7 @@ JustGage.prototype.refresh = function(val) {
             obj.config.reverse
         ],
         "fill": color
-    }, obj.config.refreshAnimationTime, obj.config.refreshAnimationType);
+    }, obj.config.refreshAnimationTime, obj.config.refreshAnimationType, obj.config.onAnimationEnd);
 
     if (obj.config.pointer) {
         obj.needle.animate({
@@ -888,9 +803,11 @@ JustGage.prototype.refresh = function(val) {
             ]
         }, obj.config.refreshAnimationTime, obj.config.refreshAnimationType);
     }
+};
 
-    // var clear
-    obj, displayVal, color, max = null;
+/** Destroy gauge object */
+JustGage.prototype.destroy = function() {
+    document.getElementById(this.config.id).innerHTML = '';
 };
 
 /** Generate shadow */
@@ -948,9 +865,9 @@ JustGage.prototype.generateShadow = function(svg, defs) {
     gaussFilter.appendChild(feComposite3);
 
     // set shadow
-    if (!obj.config.hideInnerShadow) {
-        obj.canvas.canvas.childNodes[2].setAttribute("filter", "url(#" + sid + ")");
-        obj.canvas.canvas.childNodes[3].setAttribute("filter", "url(#" + sid + ")");
+    if (obj.config.showInnerShadow) {
+        obj.canvas.canvas.childNodes[2].setAttribute("filter", "url(" + window.location.pathname + "#" + sid + ")");
+        obj.canvas.canvas.childNodes[3].setAttribute("filter", "url(" + window.location.pathname + "#" + sid + ")");
     }
 
     // var clear
@@ -1006,9 +923,10 @@ function getColor(val, pct, col, noGradient, custSec) {
     var noGradient = noGradient || custSec.length > 0;
 
     if (custSec.length > 0) {
-        for (var i = 0; i < custSec.length; i++) {
-            if (val > custSec[i].lo && val <= custSec[i].hi) {
-                return custSec[i].color;
+        if (custSec.percents === true) val = pct * 100;
+        for (var i = 0; i < custSec.ranges.length; i++) {
+            if (val >= custSec.ranges[i].lo && val <= custSec.ranges[i].hi) {
+                return custSec.ranges[i].color;
             }
         }
     }
@@ -1074,22 +992,6 @@ function getRandomInt(min, max) {
 /**  Cut hex  */
 function cutHex(str) {
     return (str.charAt(0) == "#") ? str.substring(1, 7) : str;
-}
-
-/**  Human friendly number suffix - From: http://stackoverflow.com/questions/2692323/code-golf-friendly-number-abbreviator */
-function humanFriendlyNumber(n, d) {
-    var p, d2, i, s;
-
-    p = Math.pow;
-    d2 = p(10, d);
-    i = 7;
-    while (i) {
-        s = p(10, i-- * 3);
-        if (s <= n) {
-            n = Math.round(n * d2 / s) / d2 + "KMGTPE" [i];
-        }
-    }
-    return n;
 }
 
 /**  Get style  */
