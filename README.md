@@ -1,6 +1,11 @@
 Modified and updated version of: http://justgage.com
 
 # Versions
+
+## 1.0.3
+Added feature to set border color of the gauge.
+Improved quellcode.
+
 ## 1.0.0
 Because of the fork we will continue the version from 1.0.0
 This version is mostly used for the initial commit.
