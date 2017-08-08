@@ -58,6 +58,9 @@ JustGage = function(config) {
         // gauge height
         height: kvLookup('height', config, dataset, null),
 
+        gaugeBorderColor: kvLookup('gaugeBorderColor', config, dataset, "none"),
+        levelBorderColor: kvLookup('levelBorderColor', config, dataset, "none"),
+
         // title : string
         // gauge title
         title: kvLookup('title', config, dataset, ""),
@@ -582,7 +585,7 @@ JustGage = function(config) {
 
     // gauge
     obj.gauge = obj.canvas.path().attr({
-        "stroke": "black",
+        "stroke": conf.gaugeBorderColor ? conf.gaugeBorderColor : "none",
         "stroke_width": 0.1,
         "fill": obj.config.gaugeColor,
         pki: [
@@ -601,7 +604,7 @@ JustGage = function(config) {
 
     // level
     obj.level = obj.canvas.path().attr({
-        "stroke": "black",
+        "stroke": conf.gaudeBorderColor ? conf.levelBorderColor : "none",
         "stroke_width": 0.1,
         "fill": getColor(obj.config.value, (obj.config.value - obj.config.min) / (obj.config.max - obj.config.min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors),
         pki: [
