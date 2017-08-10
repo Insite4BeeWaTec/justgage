@@ -1,29 +1,27 @@
 JustGage = function(config) {
 
+    // Create pointer to myself
     var obj = this;
 
-    // Helps in case developer wants to debug it. unobtrusive
-    if (config === null || config === undefined) {
-        console.log('* justgage: Make sure to pass options to the constructor!');
-        return false;
-    }
+    // Check if config object exists
+    if (config === null || config === undefined) return undefined;
 
+    // Get the parent node (by ID or as DOM-Object)
     var node;
-
     if (config.id !== null && config.id !== undefined) {
         node = document.getElementById(config.id);
         if (!node) {
             console.log('* justgage: No element with id : %s found', config.id);
-            return false;
+            return undefined;
         }
     } else if (config.parentNode !== null && config.parentNode !== undefined) {
         node = config.parentNode;
     } else {
         console.log('* justgage: Make sure to pass the existing element id or parentNode to the constructor.');
-        return false;
+        return undefined;
     }
 
-    var dataset = node.dataset ? node.dataset : {};
+    var dataset = {};
 
     // check for defaults
     var defaults = (config.defaults !== null && config.defaults !== undefined) ? config.defaults : false;
@@ -34,200 +32,67 @@ JustGage = function(config) {
 
     // configurable parameters
     obj.config = {
-        // id : string
-        // this is container element id
         id: config.id,
+        defaults: loadConfiguration('defaults', config, 0),
+        parentNode: loadConfiguration('parentNode', config, null),
+        width: loadConfiguration('width', config, null),
+        height: loadConfiguration('height', config, null),
+        reverse: loadConfiguration('reverse', config, false),
+        gaugeWidthScale: loadConfiguration('gaugeWidthScale', config, 1.0),
+        shadowOpacity: loadConfiguration('shadowOpacity', config, 0.2),
+        shadowSize: loadConfiguration('shadowSize', config, 5),
+        shadowVerticalOffset: loadConfiguration('shadowVerticalOffset', config, 3),
+        donutStartAngle: loadConfiguration('donutStartAngle', config, 90),
+        hideInnerShadow: loadConfiguration('hideInnerShadow', config, false),
+        donut: loadConfiguration('donut', config, false),
+        relativeGaugeSize: loadConfiguration('relativeGaugeSize', config, false),
+        counter: loadConfiguration('counter', config, false),
+        decimals: loadConfiguration('decimals', config, 0),
+        customSectors: loadConfiguration('customSectors', config, []),
+        pointer: loadConfiguration('pointer', config, false),
+        pointerOptions: loadConfiguration('pointerOptions', config, []),
 
-        // value : float
-        // value gauge is showing
-        value: kvLookup('value', config, dataset, 0, 'float'),
+        // Animation (Type: https://dmitrybaranovskiy.github.io/raphael/reference.html#Raphael.easing_formulas)
+        startAnimationTime: loadConfiguration('startAnimationTime', config, 700),
+        startAnimationType: loadConfiguration('startAnimationType', config, 'linear'),
+        refreshAnimationTime: loadConfiguration('refreshAnimationTime', config, 700),
+        refreshAnimationType: loadConfiguration('refreshAnimationType', config, 'linear'),
 
-        // defaults : bool
-        // defaults parameter to use
-        defaults: kvLookup('defaults', config, dataset, 0, false),
+        // Gauge colors
+        noGradient: loadConfiguration('noGradient', config, false),
+        levelColors: loadConfiguration('levelColors', config, ["#a9d70b", "#f9c802", "#ff0000"], 'array', ','),
+        gaugeBorderColor: loadConfiguration('gaugeBorderColor', config, "none"),
+        levelBorderColor: loadConfiguration('levelBorderColor', config, "none"),
+        gaugeColor: loadConfiguration('gaugeColor', config, "white"),
 
-        // parentNode : node object
-        // this is container element
-        parentNode: kvLookup('parentNode', config, dataset, null),
+        // Values / Label-Texts
+        unit: loadConfiguration('unit', config, ''),
+        min: loadConfiguration('min', config, 0, 'float'),
+        max: loadConfiguration('max', config, 100, 'float'),
+        value: loadConfiguration('value', config, 0, 'float'),
 
-        // width : int
-        // gauge width
-        width: kvLookup('width', config, dataset, null),
+        // Label-Visibility
+        hideValue: loadConfiguration('hideValue', config, false),
+        hideMin: loadConfiguration('hideMin', config, false),
+        hideMax: loadConfiguration('hideMax', config, false),
 
-        // height : int
-        // gauge height
-        height: kvLookup('height', config, dataset, null),
+        // Label-Settings
+        labelFontColor: loadConfiguration('labelFontColor', config, "#b3b3b3"),
 
-        gaugeBorderColor: kvLookup('gaugeBorderColor', config, dataset, "none"),
-        levelBorderColor: kvLookup('levelBorderColor', config, dataset, "none"),
+        valueFontColor: loadConfiguration('valueFontColor', config, "#010101"),
+        valueFontSize: loadConfiguration('valueFontSize', config, 16),
+        valueFontFamily: loadConfiguration('valueFontFamily', config, "Arial"),
+        valueSuffix: loadConfiguration('valueSuffix', config, ''),
 
-        // title : string
-        // gauge title
-        title: kvLookup('title', config, dataset, ""),
+        title: loadConfiguration('title', config, ""),
+        titleFontColor: loadConfiguration('titleFontColor', config, "#999999"),
+        titleFontFamily: loadConfiguration('titleFontFamily', config, "sans-serif"),
+        titlePosition: loadConfiguration('titlePosition', config, "above"),
 
-        // titleFontColor : string
-        // color of gauge title
-        titleFontColor: kvLookup('titleFontColor', config, dataset, "#999999"),
-
-        // titleFontFamily : string
-        // color of gauge title
-        titleFontFamily: kvLookup('titleFontFamily', config, dataset, "sans-serif"),
-
-        // titlePosition : string
-        // 'above' or 'below'
-        titlePosition: kvLookup('titlePosition', config, dataset, "above"),
-
-        // valueFontColor : string
-        // color of label showing current value
-        valueFontColor: kvLookup('valueFontColor', config, dataset, "#010101"),
-
-        // valueFontFamily : string
-        // color of label showing current value
-        valueFontFamily: kvLookup('valueFontFamily', config, dataset, "Arial"),
-
-        // symbol : string
-        // special symbol to show next to value
-        symbol: kvLookup('symbol', config, dataset, ''),
-
-        // min : float
-        // min value
-        min: kvLookup('min', config, dataset, 0, 'float'),
-
-        // max : float
-        // max value
-        max: kvLookup('max', config, dataset, 100, 'float'),
-
-        // reverse : bool
-        // reverse min and max
-        reverse: kvLookup('reverse', config, dataset, false),
-
-        // humanFriendlyDecimal : int
-        // number of decimal places for our human friendly number to contain
-        humanFriendlyDecimal: kvLookup('humanFriendlyDecimal', config, dataset, 0),
-
-        // textRenderer: func
-        // function applied before rendering text
-        textRenderer: kvLookup('textRenderer', config, dataset, null),
-
-        // gaugeWidthScale : float
-        // width of the gauge element
-        gaugeWidthScale: kvLookup('gaugeWidthScale', config, dataset, 1.0),
-
-        // gaugeColor : string
-        // background color of gauge element
-        gaugeColor: kvLookup('gaugeColor', config, dataset, "white"),
-
-        // label : string
-        // text to show below value
-        label: kvLookup('label', config, dataset, ''),
-
-        // labelFontColor : string
-        // color of label showing label under value
-        labelFontColor: kvLookup('labelFontColor', config, dataset, "#b3b3b3"),
-
-        // shadowOpacity : int
-        // 0 ~ 1
-        shadowOpacity: kvLookup('shadowOpacity', config, dataset, 0.2),
-
-        // shadowSize: int
-        // inner shadow size
-        shadowSize: kvLookup('shadowSize', config, dataset, 5),
-
-        // shadowVerticalOffset : int
-        // how much shadow is offset from top
-        shadowVerticalOffset: kvLookup('shadowVerticalOffset', config, dataset, 3),
-
-        // levelColors : string[]
-        // colors of indicator, from lower to upper, in RGB format
-        levelColors: kvLookup('levelColors', config, dataset, ["#a9d70b", "#f9c802", "#ff0000"], 'array', ','),
-
-        // startAnimationTime : int
-        // length of initial animation
-        startAnimationTime: kvLookup('startAnimationTime', config, dataset, 700),
-
-        // startAnimationType : string
-        // type of initial animation (linear, >, <,  <>, bounce)
-        startAnimationType: kvLookup('startAnimationType', config, dataset, '>'),
-
-        // refreshAnimationTime : int
-        // length of refresh animation
-        refreshAnimationTime: kvLookup('refreshAnimationTime', config, dataset, 700),
-
-        // refreshAnimationType : string
-        // type of refresh animation (linear, >, <,  <>, bounce)
-        refreshAnimationType: kvLookup('refreshAnimationType', config, dataset, '>'),
-
-        // donutStartAngle : int
-        // angle to start from when in donut mode
-        donutStartAngle: kvLookup('donutStartAngle', config, dataset, 90),
-
-        // valueMinFontSize : int
-        // absolute minimum font size for the value
-        valueMinFontSize: kvLookup('valueMinFontSize', config, dataset, 16),
-
-        // titleMinFontSize
-        // absolute minimum font size for the title
-        titleMinFontSize: kvLookup('titleMinFontSize', config, dataset, 10),
-
-        // labelMinFontSize
-        // absolute minimum font size for the label
-        labelMinFontSize: kvLookup('labelMinFontSize', config, dataset, 10),
-
-        // minLabelMinFontSize
-        // absolute minimum font size for the minimum label
-        minLabelMinFontSize: kvLookup('minLabelMinFontSize', config, dataset, 10),
-
-        // maxLabelMinFontSize
-        // absolute minimum font size for the maximum label
-        maxLabelMinFontSize: kvLookup('maxLabelMinFontSize', config, dataset, 10),
-
-        // hideValue : bool
-        // hide value text
-        hideValue: kvLookup('hideValue', config, dataset, false),
-
-        // hideMinMax : bool
-        // hide min and max values
-        hideMinMax: kvLookup('hideMinMax', config, dataset, false),
-
-        // hideInnerShadow : bool
-        // hide inner shadow
-        hideInnerShadow: kvLookup('hideInnerShadow', config, dataset, false),
-
-        // humanFriendly : bool
-        // convert large numbers for min, max, value to human friendly (e.g. 1234567 -> 1.23M)
-        humanFriendly: kvLookup('humanFriendly', config, dataset, false),
-
-        // noGradient : bool
-        // whether to use gradual color change for value, or sector-based
-        noGradient: kvLookup('noGradient', config, dataset, false),
-
-        // donut : bool
-        // show full donut gauge
-        donut: kvLookup('donut', config, dataset, false),
-
-        // relativeGaugeSize : bool
-        // whether gauge size should follow changes in container element size
-        relativeGaugeSize: kvLookup('relativeGaugeSize', config, dataset, false),
-
-        // counter : bool
-        // animate level number change
-        counter: kvLookup('counter', config, dataset, false),
-
-        // decimals : int
-        // number of digits after floating point
-        decimals: kvLookup('decimals', config, dataset, 0),
-
-        // customSectors : [] of objects
-        // number of digits after floating point
-        customSectors: kvLookup('customSectors', config, dataset, []),
-
-        // pointer : bool
-        // show value pointer
-        pointer: kvLookup('pointer', config, dataset, false),
-
-        // pointerOptions : object
-        // define pointer look
-        pointerOptions: kvLookup('pointerOptions', config, dataset, [])
+        titleMinFontSize: loadConfiguration('titleMinFontSize', config, 10),
+        unitLabelMinFontSize: loadConfiguration('unitLabelMinFontSize', config, 10),
+        minLabelMinFontSize: loadConfiguration('minLabelMinFontSize', config, 10),
+        maxLabelMinFontSize: loadConfiguration('maxLabelMinFontSize', config, 10),
     };
 
     // variables
@@ -245,20 +110,15 @@ JustGage = function(config) {
         valueFontSize,
         valueX,
         valueY,
-        labelFontSize,
-        labelX,
-        labelY,
+        unitFontSize,
+        unitX,
+        unitY,
         minFontSize,
         minX,
         minY,
         maxFontSize,
         maxX,
         maxY;
-
-    // overflow values
-    if (obj.config.value > obj.config.max) obj.config.value = obj.config.max;
-    if (obj.config.value < obj.config.min) obj.config.value = obj.config.min;
-    obj.originalValue = kvLookup('value', config, dataset, -1, 'float');
 
     // create canvas
     if (obj.config.id !== null && (document.getElementById(obj.config.id)) !== null) {
@@ -279,9 +139,9 @@ JustGage = function(config) {
         canvasW = obj.config.width;
         canvasH = obj.config.height;
     } else if (obj.config.parentNode !== null) {
-        obj.canvas.setViewBox(0, 0, 200, 150, true);
-        canvasW = 200;
-        canvasH = 150;
+        canvasW = obj.config.parentNode.offsetWidth;
+        canvasH = obj.config.parentNode.offsetHeight;
+        obj.canvas.setViewBox(0, 0, canvasW, canvasH, true);
     } else {
         canvasW = getStyle(document.getElementById(obj.config.id), "width").slice(0, -2) * 1;
         canvasH = getStyle(document.getElementById(obj.config.id), "height").slice(0, -2) * 1;
@@ -289,8 +149,6 @@ JustGage = function(config) {
 
     // widget dimensions
     if (obj.config.donut === true) {
-
-        // DONUT *******************************
 
         // width more than height
         if (canvasW > canvasH) {
@@ -331,23 +189,21 @@ JustGage = function(config) {
         }
 
         // label
-        labelFontSize = ((widgetH / 16) > 10) ? (widgetH / 16) : 10;
-        labelX = dx + widgetW / 2;
-        labelY = valueY + labelFontSize;
+        unitFontSize = ((widgetH / 16) > 10) ? (widgetH / 16) : 10;
+        unitX = dx + widgetW / 2;
+        unitY = valueY + unitFontSize;
 
         // min
         minFontSize = ((widgetH / 16) > 10) ? (widgetH / 16) : 10;
         minX = dx + (widgetW / 10) + (widgetW / 6.666666666666667 * obj.config.gaugeWidthScale) / 2;
-        minY = labelY;
+        minY = unitY;
 
         // max
         maxFontSize = ((widgetH / 16) > 10) ? (widgetH / 16) : 10;
         maxX = dx + widgetW - (widgetW / 10) - (widgetW / 6.666666666666667 * obj.config.gaugeWidthScale) / 2;
-        maxY = labelY;
+        maxY = unitY;
 
     } else {
-        // HALF *******************************
-
         // width more than height
         if (canvasW > canvasH) {
             widgetH = canvasH;
@@ -369,9 +225,6 @@ JustGage = function(config) {
                 widgetW = widgetH / aspect;
             }
             // equal
-        } else {
-            widgetW = canvasW;
-            widgetH = widgetW * 0.75;
         }
 
         // delta
@@ -388,24 +241,24 @@ JustGage = function(config) {
         titleY = dy + (obj.config.titlePosition === 'below' ? (widgetH * 1.07) : (widgetH / 6.4));
 
         // value
-        valueFontSize = ((widgetH / 6.5) > obj.config.valueMinFontSize) ? (widgetH / 6.5) : obj.config.valueMinFontSize;
+        valueFontSize = ((widgetH / 6.5) > obj.config.valueFontSize) ? (widgetH / 6.5) : obj.config.valueFontSize;
         valueX = dx + widgetW / 2;
         valueY = dy + widgetH / 1.275;
 
         // label
-        labelFontSize = ((widgetH / 16) > obj.config.labelMinFontSize) ? (widgetH / 16) : obj.config.labelMinFontSize;
-        labelX = dx + widgetW / 2;
-        labelY = valueY + valueFontSize / 2 + 5;
+        unitFontSize = ((widgetH / 16) > obj.config.unitLabelMinFontSize) ? (widgetH / 16) : obj.config.unitLabelMinFontSize;
+        unitX = dx + widgetW / 2;
+        unitY = valueY + valueFontSize / 2 + 5;
 
         // min
         minFontSize = ((widgetH / 16) > obj.config.minLabelMinFontSize) ? (widgetH / 16) : obj.config.minLabelMinFontSize;
         minX = dx + (widgetW / 10) + (widgetW / 6.666666666666667 * obj.config.gaugeWidthScale) / 2;
-        minY = labelY;
+        minY = unitY;
 
         // max
         maxFontSize = ((widgetH / 16) > obj.config.maxLabelMinFontSize) ? (widgetH / 16) : obj.config.maxLabelMinFontSize;
         maxX = dx + widgetW - (widgetW / 10) - (widgetW / 6.666666666666667 * obj.config.gaugeWidthScale) / 2;
-        maxY = labelY;
+        maxY = unitY;
     }
 
     // parameters
@@ -422,9 +275,9 @@ JustGage = function(config) {
         valueFontSize: valueFontSize,
         valueX: valueX,
         valueY: valueY,
-        labelFontSize: labelFontSize,
-        labelX: labelX,
-        labelY: labelY,
+        unitFontSize: unitFontSize,
+        unitX: unitX,
+        unitY: unitY,
         minFontSize: minFontSize,
         minX: minX,
         minY: minY,
@@ -432,9 +285,6 @@ JustGage = function(config) {
         maxX: maxX,
         maxY: maxY
     };
-
-    // var clear
-    canvasW, canvasH, widgetW, widgetH, aspect, dx, dy, titleFontSize, titleX, titleY, valueFontSize, valueX, valueY, labelFontSize, labelX, labelY, minFontSize, minX, minY, maxFontSize, maxX, maxY = null;
 
     // pki - custom attribute for generating gauge paths
     obj.canvas.customAttributes.pki = function(value, min, max, w, h, dx, dy, gws, donut, reverse) {
@@ -495,9 +345,6 @@ JustGage = function(config) {
                 path: path
             };
         }
-
-        // var clear
-        alpha, Ro, Ri, Cx, Cy, Xo, Yo, Xi, Yi, path = null;
     };
 
     // ndl - custom attribute for generating needle path
@@ -578,13 +425,9 @@ JustGage = function(config) {
                 path: path
             };
         }
-
-        // var clear
-        alpha, Ro, Ri, Cx, Cy, Xo, Yo, Xi, Yi, Xc, Yc, Xz, Yz, Xa, Ya, Xb, Yb, path = null;
     };
 
     // gauge
-    console.log(this.config.gaugeBorderColor)
     obj.gauge = obj.canvas.path().attr({
         "stroke": this.config.gaugeBorderColor,
         "stroke_width": 0.1,
@@ -602,6 +445,7 @@ JustGage = function(config) {
             obj.config.reverse
         ]
     });
+    obj.gauge.node.id = "TEST"
 
     // level
     obj.level = obj.canvas.path().attr({
@@ -623,6 +467,7 @@ JustGage = function(config) {
     });
     if (obj.config.donut) {
         obj.level.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
+        obj.gauge.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
     }
 
     if (obj.config.pointer) {
@@ -662,58 +507,49 @@ JustGage = function(config) {
     });
     setDy(obj.titleLabelObject, obj.params.titleFontSize, obj.params.titleY);
 
-    // value
-    obj.txtValue = obj.canvas.text(obj.params.valueX, obj.params.valueY, 0);
-    obj.txtValue.attr({
+    // Value
+    obj.valueLabelObject = obj.canvas.text(obj.params.valueX, obj.params.valueY, this.config.value.toString());
+    obj.valueLabelObject.attr({
         "font-size": obj.params.valueFontSize,
         "font-weight": "bold",
         "font-family": obj.config.valueFontFamily,
         "fill": obj.config.valueFontColor,
         "fill-opacity": "0"
     });
-    setDy(obj.txtValue, obj.params.valueFontSize, obj.params.valueY);
+    setDy(obj.valueLabelObject, obj.params.valueFontSize, obj.params.valueY);
 
-    // label
-    obj.txtLabel = obj.canvas.text(obj.params.labelX, obj.params.labelY, obj.config.label);
-    obj.txtLabel.attr({
-        "font-size": obj.params.labelFontSize,
+    // Unit label
+    obj.unitLabelObject = obj.canvas.text(obj.params.unitX, obj.params.unitY, obj.config.unit);
+    obj.unitLabelObject.attr({
+        "font-size": obj.params.unitFontSize,
         "font-weight": "normal",
         "font-family": "Arial",
         "fill": obj.config.labelFontColor,
         "fill-opacity": "0"
     });
-    setDy(obj.txtLabel, obj.params.labelFontSize, obj.params.labelY);
+    setDy(this.unitLabelObject, this.params.unitFontSize, this.params.unitY);
 
-    // min
-    var min = obj.config.min;
-    if (obj.config.reverse) {
-        min = obj.config.max;
-    }
-
-    obj.minLabelObject = obj.canvas.text(obj.params.minX, obj.params.minY, obj.config.min);
+    // Min label
+    obj.minLabelObject = obj.canvas.text(obj.params.minX, obj.params.minY, this.config.min.toString());
     obj.minLabelObject.attr({
         "font-size": obj.params.minFontSize,
         "font-weight": "normal",
         "font-family": "Arial",
         "fill": obj.config.labelFontColor,
-        "fill-opacity": (obj.config.hideMinMax || obj.config.donut) ? "0" : "1"
+        "fill-opacity": (obj.config.hideMin || obj.config.donut) ? "0" : "1",
     });
-    setDy(obj.minLabelObject, obj.params.minFontSize, obj.params.minY);
+    setDy(this.minLabelObject, this.params.minFontSize, this.params.minY);
 
-    // max
-    var max = obj.config.max;
-    if (obj.config.reverse) {
-        max = obj.config.min;
-    }
-    obj.maxLabelObject = obj.canvas.text(obj.params.maxX, obj.params.maxY, obj.config.max);
+    // Max label
+    obj.maxLabelObject = obj.canvas.text(obj.params.maxX, obj.params.maxY, this.config.max.toString());
     obj.maxLabelObject.attr({
         "font-size": obj.params.maxFontSize,
         "font-weight": "normal",
         "font-family": "Arial",
         "fill": obj.config.labelFontColor,
-        "fill-opacity": (obj.config.hideMinMax || obj.config.donut) ? "0" : "1"
+        "fill-opacity": (obj.config.hideMax || obj.config.donut) ? "0" : "1"
     });
-    setDy(obj.maxLabelObject, obj.params.maxFontSize, obj.params.maxY);
+    setDy(this.maxLabelObject, this.params.maxFontSize, this.params.maxY);
 
     var defs = obj.canvas.canvas.childNodes[1];
     var svg = "http://www.w3.org/2000/svg";
@@ -726,37 +562,6 @@ JustGage = function(config) {
         });
     } else {
         obj.generateShadow(svg, defs);
-    }
-
-    // var clear
-    defs, svg = null;
-
-    // set value to display
-    obj.originalValue = (obj.originalValue * 1).toFixed(obj.config.decimals) + obj.config.symbol;
-
-    if (obj.config.counter === true) {
-        //on each animation frame
-        eve.on("raphael.anim.frame." + (obj.level.id), function() {
-            var currentValue = obj.level.attr("pki")[0];
-            obj.txtValue.attr("text", (currentValue * 1).toFixed(obj.config.decimals) + obj.config.symbol);
-            setDy(obj.txtValue, obj.params.valueFontSize, obj.params.valueY);
-            currentValue = null;
-        });
-        //on animation end
-        eve.on("raphael.anim.finish." + (obj.level.id), function() {
-            obj.txtValue.attr({
-                "text": obj.originalValue
-            });
-            setDy(obj.txtValue, obj.params.valueFontSize, obj.params.valueY);
-        });
-    } else {
-        //on animation start
-        eve.on("raphael.anim.start." + (obj.level.id), function() {
-            obj.txtValue.attr({
-                "text": obj.originalValue
-            });
-            setDy(obj.txtValue, obj.params.valueFontSize, obj.params.valueY);
-        });
     }
 
     // animate gauge level, value & label
@@ -795,77 +600,88 @@ JustGage = function(config) {
         }, obj.config.startAnimationTime, obj.config.startAnimationType);
     }
 
-    obj.txtValue.animate({
+    obj.valueLabelObject.animate({
         "fill-opacity": (obj.config.hideValue) ? "0" : "1"
     }, obj.config.startAnimationTime, obj.config.startAnimationType);
-    obj.txtLabel.animate({
+    obj.unitLabelObject.animate({
         "fill-opacity": "1"
     }, obj.config.startAnimationTime, obj.config.startAnimationType);
 };
 
+JustGage.prototype.setNewUnit = function(unit) {
+
+    // Check if value is valid and different
+    if (unit !== null && this.config.unit !== unit && typeof unit == 'string') {
+        this.config.unit = unit;
+
+        this.unitLabelObject.attr({ "text": unit });
+        setDy(this.unitLabelObject, this.params.unitFontSize, this.params.unitY);
+    }
+}
+
 JustGage.prototype.setNewMin = function(min) {
 
     // Check if value is valid and different
-    if (min !== null && this.config.min !== min && !isNan(parseFloat(min))) {
+    if (typeof min !== 'undefined' && this.config.min !== min && !isNaN(parseFloat(min))) {
         this.config.min = min;
 
         var newText;
         newText = this.config.min.toString();
         this.minLabelObject.attr({ "text": newText });
         setDy(this.minLabelObject, this.params.minFontSize, this.params.minY);
+
+        this.refresh();
     }
 }
 
 JustGage.prototype.setNewMax = function(max) {
 
     // Check if value is valid and different
-    if (max !== null && this.config.max !== max && !isNan(parseFloat(max))) {
+    if (max !== null && this.config.max !== max && !isNaN(parseFloat(max))) {
         this.config.max = max;
 
         var newText;
         newText = this.config.max.toString();
         this.maxLabelObject.attr({ "text": newText });
         setDy(this.maxLabelObject, this.params.maxFontSize, this.params.maxY);
+
+        this.refresh();
     }
 }
 
-/** Refresh gauge level */
-JustGage.prototype.refresh = function(val) {
+JustGage.prototype.setNewValue = function(value) {
+
+    // Check if value is valid and different
+    if (value !== null && this.config.value !== value && !isNaN(parseFloat(value))) {
+        this.config.value = value;
+
+        var newText;
+        newText = this.config.value.toString() + this.config.valueSuffix;
+        this.valueLabelObject.attr({ "text": newText });
+        setDy(this.valueLabelObject, this.params.valueFontSize, this.params.valueY);
+
+        this.refresh();
+    }
+}
+
+JustGage.prototype.refresh = function() {
 
     var obj = this;
-    var displayVal, color, max = max || null;
+    var max = Math.abs(this.config.max);
+    var min = Math.abs(this.config.min);
+    var value = Math.abs(this.config.value);
 
-    // overflow values
-    displayVal = val;
-    if ((val * 1) > (obj.config.max * 1)) {
-        val = (obj.config.max * 1);
-    }
-    if ((val * 1) < (obj.config.min * 1)) {
-        val = (obj.config.min * 1);
-    }
+    color = getColor(value, (value - min) / (max - min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors);
 
-    color = getColor(val, (val - obj.config.min) / (obj.config.max - obj.config.min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors);
-
-    displayVal = (displayVal * 1).toFixed(obj.config.decimals) + obj.config.symbol;
-    obj.originalValue = displayVal;
-    obj.config.value = val * 1;
-
-    if (!obj.config.counter) {
-        obj.txtValue.attr({
-            "text": displayVal
-        });
-        setDy(obj.txtValue, obj.params.valueFontSize, obj.params.valueY);
-    }
-
-    var rvl = obj.config.value;
+    var rvl = value;
     if (obj.config.reverse) {
-        rvl = (obj.config.max * 1) + (obj.config.min * 1) - (obj.config.value * 1);
+        rvl = (max * 1) + (min * 1) - (value * 1);
     }
     obj.level.animate({
         pki: [
             rvl,
-            obj.config.min,
-            obj.config.max,
+            min,
+            max,
             obj.params.widgetW,
             obj.params.widgetH,
             obj.params.dx,
@@ -881,8 +697,8 @@ JustGage.prototype.refresh = function(val) {
         obj.needle.animate({
             ndl: [
                 rvl,
-                obj.config.min,
-                obj.config.max,
+                min,
+                max,
                 obj.params.widgetW,
                 obj.params.widgetH,
                 obj.params.dx,
@@ -892,9 +708,6 @@ JustGage.prototype.refresh = function(val) {
             ]
         }, obj.config.refreshAnimationTime, obj.config.refreshAnimationType);
     }
-
-    // var clear
-    obj, displayVal, color, max = null;
 };
 
 /** Generate shadow */
@@ -956,50 +769,37 @@ JustGage.prototype.generateShadow = function(svg, defs) {
         obj.canvas.canvas.childNodes[2].setAttribute("filter", "url(#" + sid + ")");
         obj.canvas.canvas.childNodes[3].setAttribute("filter", "url(#" + sid + ")");
     }
-
-    // var clear
-    gaussFilter, feOffset, feGaussianBlur, feComposite1, feFlood, feComposite2, feComposite3 = null;
 };
 
-//
-// tiny helper function to lookup value of a key from two hash tables
-// if none found, return defaultvalue
-//
-// key: string
-// tablea: object
-// tableb: DOMStringMap|object
-// defval: string|integer|float|null
-// datatype: return datatype
-// delimiter: delimiter to be used in conjunction with datatype formatting
-//
-function kvLookup(key, tablea, tableb, defval, datatype, delimiter) {
-    var val = defval;
-    var canConvert = false;
-    if (!(key === null || key === undefined)) {
-        if (tableb !== null && tableb !== undefined && typeof tableb === "object" && key in tableb) {
-            val = tableb[key];
-            canConvert = true;
-        } else if (tablea !== null && tablea !== undefined && typeof tablea === "object" && key in tablea) {
-            val = tablea[key];
-            canConvert = true;
-        } else {
-            val = defval;
+function loadConfiguration(searchKey, config, defaultValue, datatype) {
+
+    // Define default value
+    var val = defaultValue;
+
+    // Check if search key is valid
+    if (!(searchKey === null || searchKey === undefined)) {
+
+        // Check if config map contains the searchKey
+        if (config !== null && config !== undefined && typeof config === "object" && searchKey in config) {
+
+            // Use value from config
+            val = config[searchKey];
         }
-        if (canConvert === true) {
-            if (datatype !== null && datatype !== undefined) {
-                switch (datatype) {
-                    case 'int':
-                        val = parseInt(val, 10);
-                        break;
-                    case 'float':
-                        val = parseFloat(val);
-                        break;
-                    default:
-                        break;
-                }
+
+        // Try to parse value to special datatype
+        if (typeof datatype == 'string') {
+            switch (datatype) {
+                case 'int':
+                    val = parseInt(val, 10);
+                    break;
+                case 'float':
+                    val = parseFloat(val);
+                    break;
             }
         }
     }
+
+    // Return value
     return val;
 };
 
@@ -1080,22 +880,6 @@ function cutHex(str) {
     return (str.charAt(0) == "#") ? str.substring(1, 7) : str;
 }
 
-/**  Human friendly number suffix - From: http://stackoverflow.com/questions/2692323/code-golf-friendly-number-abbreviator */
-function humanFriendlyNumber(n, d) {
-    var p, d2, i, s;
-
-    p = Math.pow;
-    d2 = p(10, d);
-    i = 7;
-    while (i) {
-        s = p(10, i-- * 3);
-        if (s <= n) {
-            n = Math.round(n * d2 / s) / d2 + "KMGTPE" [i];
-        }
-    }
-    return n;
-}
-
 /**  Get style  */
 function getStyle(oElm, strCssRule) {
     var strValue = "";
@@ -1116,8 +900,9 @@ function onCreateElementNsReady(func) {
         func();
     } else {
         setTimeout(function() {
-            onCreateElementNsReady(func);
+            onCreateElemenntNsReady(func);
         }, 100);
+        npm
     }
 }
 
