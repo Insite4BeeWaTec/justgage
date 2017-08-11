@@ -63,6 +63,8 @@ JustGage = function(config) {
         levelColors: loadConfiguration('levelColors', config, ["#a9d70b", "#f9c802", "#ff0000"], 'array', ','),
         gaugeBorderColor: loadConfiguration('gaugeBorderColor', config, "none"),
         levelBorderColor: loadConfiguration('levelBorderColor', config, "none"),
+        gaugeBorderWidth: loadConfiguration('levelBorderColor', config, 1),
+        levelBorderWidth: loadConfiguration('levelBorderColor', config, 1),
         gaugeColor: loadConfiguration('gaugeColor', config, "white"),
 
         // Values / Label-Texts
@@ -427,11 +429,9 @@ JustGage = function(config) {
         }
     };
 
-    // gauge
+    // Gauge background
     obj.gauge = obj.canvas.path().attr({
-        "stroke": this.config.gaugeBorderColor,
-        "stroke_width": 0.1,
-        "fill": obj.config.gaugeColor,
+        "fill": "white",
         pki: [
             obj.config.max,
             obj.config.min,
@@ -445,12 +445,11 @@ JustGage = function(config) {
             obj.config.reverse
         ]
     });
-    obj.gauge.node.id = "TEST"
 
     // level
     obj.level = obj.canvas.path().attr({
-        "stroke": this.config.gaudeBorderColor,
-        "stroke_width": 0.1,
+        "stroke": this.config.gaudeLevelColor,
+        "stroke_width": this.config.gaugeLevelWidth / 10,
         "fill": getColor(obj.config.value, (obj.config.value - obj.config.min) / (obj.config.max - obj.config.min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors),
         pki: [
             obj.config.min,
@@ -465,6 +464,26 @@ JustGage = function(config) {
             obj.config.reverse
         ]
     });
+
+    // Gauge background
+    obj.gauge = obj.canvas.path().attr({
+        "stroke": this.config.gaugeBorderColor,
+        "stroke_width": this.config.gaugeBorderWidth,
+        "fill": "transparent",
+        pki: [
+            obj.config.max,
+            obj.config.min,
+            obj.config.max,
+            obj.params.widgetW,
+            obj.params.widgetH,
+            obj.params.dx,
+            obj.params.dy,
+            obj.config.gaugeWidthScale,
+            obj.config.donut,
+            obj.config.reverse
+        ]
+    });
+
     if (obj.config.donut) {
         obj.level.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
         obj.gauge.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
