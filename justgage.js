@@ -700,7 +700,7 @@ JustGage.prototype.refresh = function() {
     // Let gauge starts with 0 -> Add offset to values
     min += (min * -1)
     max += (min * -1)
-    value = (min * -1)
+    value += (min * -1)
 
     color = getColor(value, (value - min) / (max - min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors);
 
