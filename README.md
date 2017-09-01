@@ -2,6 +2,9 @@ Modified and updated version of: http://justgage.com
 
 # Versions
 
+## 1.0.7
+Numbers can now be positive and negative
+
 ## 1.0.6
 Limit the visual value to min and max -> Resolved a visual bug
 
