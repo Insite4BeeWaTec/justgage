@@ -2,6 +2,9 @@ Modified and updated version of: http://justgage.com
 
 # Versions
 
+## 1.0.6
+Limit the visual value to min and max -> Resolved a visual bug
+
 ## 1.0.3
 Added feature to set border color of the gauge.  
 Improved quellcode.
