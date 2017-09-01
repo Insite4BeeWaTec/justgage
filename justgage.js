@@ -686,12 +686,21 @@ JustGage.prototype.setNewValue = function(value) {
 JustGage.prototype.refresh = function() {
 
     var obj = this;
-    var min = Math.abs(this.config.min);
-    var max = Math.abs(this.config.max);
-    var value = Math.abs(this.config.value);
+    var min = this.config.min
+    var max = this.config.max;
+    var value = this.config.value;
 
+    // Skip refresh if invalid values
+    if (min > max) return;
+
+    // Cap value to min and max
     if (value > max) value = max
     if (value < min) value = min
+
+    // Let gauge starts with 0 -> Add offset to values
+    min += (min * -1)
+    max += (min * -1)
+    value = (min * -1)
 
     color = getColor(value, (value - min) / (max - min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors);
 
