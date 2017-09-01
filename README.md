@@ -2,6 +2,9 @@ Modified and updated version of: http://justgage.com
 
 # Versions
 
+## 1.0.8
+Small bug in new featue resolved
+
 ## 1.0.7
 Numbers can now be positive and negative
 
