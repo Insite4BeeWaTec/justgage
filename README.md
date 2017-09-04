@@ -2,6 +2,9 @@ Modified and updated version of: http://justgage.com
 
 # Versions
 
+## 1.0.10
+Stroke (border) options will now work!
+
 ## 1.0.9
 Option to swap foreground and background.
 New option: foregroundBackgroundSwapped
