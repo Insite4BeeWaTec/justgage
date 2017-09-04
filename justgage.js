@@ -61,10 +61,10 @@ JustGage = function(config) {
         noGradient: loadConfiguration('noGradient', config, false),
         gaugeColor: loadConfiguration('gaugeColor', config, ["#FFFFFF"], 'array', ','),
         levelColors: loadConfiguration('levelColors', config, ["#a9d70b", "#f9c802", "#ff0000"], 'array', ','),
-        gaugeBorderColor: loadConfiguration('gaugeBorderColor', config, "none"),
-        levelBorderColor: loadConfiguration('levelBorderColor', config, "none"),
-        gaugeBorderWidth: loadConfiguration('levelBorderColor', config, 1),
-        levelBorderWidth: loadConfiguration('levelBorderColor', config, 1),
+        gaugeBorderColor: loadConfiguration('gaugeBorderColor', config, "#404040"),
+        levelBorderColor: loadConfiguration('levelBorderColor', config, "#404040"),
+        gaugeBorderWidth: loadConfiguration('gaugeBorderWidth', config, 1),
+        levelBorderWidth: loadConfiguration('levelBorderWidth', config, 1),
 
         // Values / Label-Texts
         unit: loadConfiguration('unit', config, ''),
@@ -367,8 +367,8 @@ JustGage = function(config) {
 
     // Gauge Level
     obj.level = obj.paper.path().attr({
-        "stroke": this.config.gaudeLevelColor,
-        "stroke_width": this.config.gaugeLevelWidth / 10,
+        "stroke": this.config.levelBorderColor,
+        "stroke-width": this.config.levelBorderWidth,
         pki: [
             obj.config.min,
             obj.config.min,
@@ -386,7 +386,7 @@ JustGage = function(config) {
     // Gauge border
     obj.gaugeBorder = obj.paper.path().attr({
         "stroke": this.config.gaugeBorderColor,
-        "stroke_width": this.config.gaugeBorderWidth,
+        "stroke-width": this.config.gaugeBorderWidth,
         "fill": "transparent",
         pki: [
             obj.config.max,
