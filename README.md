@@ -2,6 +2,10 @@ Modified and updated version of: http://justgage.com
 
 # Versions
 
+## 1.0.9
+Option to swap foreground and background.
+New option: foregroundBackgroundSwapped
+
 ## 1.0.8
 Small bug in new featue resolved
 

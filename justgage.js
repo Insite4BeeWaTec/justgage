@@ -51,21 +51,20 @@ JustGage = function(config) {
         customSectors: loadConfiguration('customSectors', config, []),
         pointer: loadConfiguration('pointer', config, false),
         pointerOptions: loadConfiguration('pointerOptions', config, []),
+        backgroundForegroundSwapped: loadConfiguration('backgroundForegroundSwapped', config, false),
 
         // Animation (Type: https://dmitrybaranovskiy.github.io/raphael/reference.html#Raphael.easing_formulas)
-        startAnimationTime: loadConfiguration('startAnimationTime', config, 700),
-        startAnimationType: loadConfiguration('startAnimationType', config, 'linear'),
-        refreshAnimationTime: loadConfiguration('refreshAnimationTime', config, 700),
-        refreshAnimationType: loadConfiguration('refreshAnimationType', config, 'linear'),
+        animationTime: loadConfiguration('animationTime', config, 700),
+        animationType: loadConfiguration('animationType', config, 'linear'),
 
         // Gauge colors
         noGradient: loadConfiguration('noGradient', config, false),
+        gaugeColor: loadConfiguration('gaugeColor', config, ["#FFFFFF"], 'array', ','),
         levelColors: loadConfiguration('levelColors', config, ["#a9d70b", "#f9c802", "#ff0000"], 'array', ','),
         gaugeBorderColor: loadConfiguration('gaugeBorderColor', config, "none"),
         levelBorderColor: loadConfiguration('levelBorderColor', config, "none"),
         gaugeBorderWidth: loadConfiguration('levelBorderColor', config, 1),
         levelBorderWidth: loadConfiguration('levelBorderColor', config, 1),
-        gaugeColor: loadConfiguration('gaugeColor', config, "white"),
 
         // Values / Label-Texts
         unit: loadConfiguration('unit', config, ''),
@@ -124,13 +123,13 @@ JustGage = function(config) {
 
     // create canvas
     if (obj.config.id !== null && (document.getElementById(obj.config.id)) !== null) {
-        obj.canvas = Raphael(obj.config.id, "100%", "100%");
+        obj.paper = Raphael(obj.config.id, "100%", "100%");
     } else if (obj.config.parentNode !== null) {
-        obj.canvas = Raphael(obj.config.parentNode, "100%", "100%");
+        obj.paper = Raphael(obj.config.parentNode, "100%", "100%");
     }
 
     if (obj.config.relativeGaugeSize === true) {
-        obj.canvas.setViewBox(0, 0, 200, 150, true);
+        obj.paper.setViewBox(0, 0, 200, 150, true);
     }
 
     // canvas dimensions
@@ -143,7 +142,7 @@ JustGage = function(config) {
     } else if (obj.config.parentNode !== null) {
         canvasW = obj.config.parentNode.offsetWidth;
         canvasH = obj.config.parentNode.offsetHeight;
-        obj.canvas.setViewBox(0, 0, canvasW, canvasH, true);
+        obj.paper.setViewBox(0, 0, canvasW, canvasH, true);
     } else {
         canvasW = getStyle(document.getElementById(obj.config.id), "width").slice(0, -2) * 1;
         canvasH = getStyle(document.getElementById(obj.config.id), "height").slice(0, -2) * 1;
@@ -289,7 +288,7 @@ JustGage = function(config) {
     };
 
     // pki - custom attribute for generating gauge paths
-    obj.canvas.customAttributes.pki = function(value, min, max, w, h, dx, dy, gws, donut, reverse) {
+    obj.paper.customAttributes.pki = function(value, min, max, w, h, dx, dy, gws, donut, reverse) {
 
         var alpha, Ro, Ri, Cx, Cy, Xo, Yo, Xi, Yi, path;
 
@@ -349,88 +348,8 @@ JustGage = function(config) {
         }
     };
 
-    // ndl - custom attribute for generating needle path
-    obj.canvas.customAttributes.ndl = function(value, min, max, w, h, dx, dy, gws, donut) {
-
-        var dlt = w * 3.5 / 100;
-        var dlb = w / 15;
-        var dw = w / 100;
-
-        if (obj.config.pointerOptions.toplength != null && obj.config.pointerOptions.toplength != undefined) dlt = obj.config.pointerOptions.toplength;
-        if (obj.config.pointerOptions.bottomlength != null && obj.config.pointerOptions.bottomlength != undefined) dlb = obj.config.pointerOptions.bottomlength;
-        if (obj.config.pointerOptions.bottomwidth != null && obj.config.pointerOptions.bottomwidth != undefined) dw = obj.config.pointerOptions.bottomwidth;
-
-        var alpha, Ro, Ri, Cx, Cy, Xo, Yo, Xi, Yi, Xc, Yc, Xz, Yz, Xa, Ya, Xb, Yb, path;
-
-        if (donut) {
-
-            alpha = (1 - 2 * (value - min) / (max - min)) * Math.PI;
-            Ro = w / 2 - w / 7;
-            Ri = Ro - w / 6.666666666666667 * gws;
-
-            Cx = w / 2 + dx;
-            Cy = h / 1.95 + dy;
-
-            Xo = w / 2 + dx + Ro * Math.cos(alpha);
-            Yo = h - (h - Cy) - Ro * Math.sin(alpha);
-            Xi = w / 2 + dx + Ri * Math.cos(alpha);
-            Yi = h - (h - Cy) - Ri * Math.sin(alpha);
-
-            Xc = Xo + dlt * Math.cos(alpha);
-            Yc = Yo - dlt * Math.sin(alpha);
-            Xz = Xi - dlb * Math.cos(alpha);
-            Yz = Yi + dlb * Math.sin(alpha);
-
-            Xa = Xz + dw * Math.sin(alpha);
-            Ya = Yz + dw * Math.cos(alpha);
-            Xb = Xz - dw * Math.sin(alpha);
-            Yb = Yz - dw * Math.cos(alpha);
-
-            path = 'M' + Xa + ',' + Ya + ' ';
-            path += 'L' + Xb + ',' + Yb + ' ';
-            path += 'L' + Xc + ',' + Yc + ' ';
-            path += 'Z ';
-
-            return {
-                path: path
-            };
-
-        } else {
-            alpha = (1 - (value - min) / (max - min)) * Math.PI;
-            Ro = w / 2 - w / 10;
-            Ri = Ro - w / 6.666666666666667 * gws;
-
-            Cx = w / 2 + dx;
-            Cy = h / 1.25 + dy;
-
-            Xo = w / 2 + dx + Ro * Math.cos(alpha);
-            Yo = h - (h - Cy) - Ro * Math.sin(alpha);
-            Xi = w / 2 + dx + Ri * Math.cos(alpha);
-            Yi = h - (h - Cy) - Ri * Math.sin(alpha);
-
-            Xc = Xo + dlt * Math.cos(alpha);
-            Yc = Yo - dlt * Math.sin(alpha);
-            Xz = Xi - dlb * Math.cos(alpha);
-            Yz = Yi + dlb * Math.sin(alpha);
-
-            Xa = Xz + dw * Math.sin(alpha);
-            Ya = Yz + dw * Math.cos(alpha);
-            Xb = Xz - dw * Math.sin(alpha);
-            Yb = Yz - dw * Math.cos(alpha);
-
-            path = 'M' + Xa + ',' + Ya + ' ';
-            path += 'L' + Xb + ',' + Yb + ' ';
-            path += 'L' + Xc + ',' + Yc + ' ';
-            path += 'Z ';
-
-            return {
-                path: path
-            };
-        }
-    };
-
     // Gauge background
-    obj.gauge = obj.canvas.path().attr({
+    obj.gaugeBackground = obj.paper.path().attr({
         "fill": "white",
         pki: [
             obj.config.max,
@@ -446,11 +365,10 @@ JustGage = function(config) {
         ]
     });
 
-    // level
-    obj.level = obj.canvas.path().attr({
+    // Gauge Level
+    obj.level = obj.paper.path().attr({
         "stroke": this.config.gaudeLevelColor,
         "stroke_width": this.config.gaugeLevelWidth / 10,
-        "fill": getColor(obj.config.value, (obj.config.value - obj.config.min) / (obj.config.max - obj.config.min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors),
         pki: [
             obj.config.min,
             obj.config.min,
@@ -463,10 +381,10 @@ JustGage = function(config) {
             obj.config.donut,
             obj.config.reverse
         ]
-    });
+    })
 
-    // Gauge background
-    obj.gauge = obj.canvas.path().attr({
+    // Gauge border
+    obj.gaugeBorder = obj.paper.path().attr({
         "stroke": this.config.gaugeBorderColor,
         "stroke_width": this.config.gaugeBorderWidth,
         "fill": "transparent",
@@ -486,37 +404,12 @@ JustGage = function(config) {
 
     if (obj.config.donut) {
         obj.level.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
-        obj.gauge.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
+        obj.gaugeBackground.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
+        obj.gaugeBorder.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
     }
 
-    if (obj.config.pointer) {
-        // needle
-        obj.needle = obj.canvas.path().attr({
-            "stroke": (obj.config.pointerOptions.stroke !== null && obj.config.pointerOptions.stroke !== undefined) ? obj.config.pointerOptions.stroke : "none",
-            "stroke-width": (obj.config.pointerOptions.stroke_width !== null && obj.config.pointerOptions.stroke_width !== undefined) ? obj.config.pointerOptions.stroke_width : 0,
-            "stroke-linecap": (obj.config.pointerOptions.stroke_linecap !== null && obj.config.pointerOptions.stroke_linecap !== undefined) ? obj.config.pointerOptions.stroke_linecap : "square",
-            "fill": (obj.config.pointerOptions.color !== null && obj.config.pointerOptions.color !== undefined) ? obj.config.pointerOptions.color : "#000000",
-            ndl: [
-                obj.config.min,
-                obj.config.min,
-                obj.config.max,
-                obj.params.widgetW,
-                obj.params.widgetH,
-                obj.params.dx,
-                obj.params.dy,
-                obj.config.gaugeWidthScale,
-                obj.config.donut
-            ]
-        });
-
-        if (obj.config.donut) {
-            obj.needle.transform("r" + obj.config.donutStartAngle + ", " + (obj.params.widgetW / 2 + obj.params.dx) + ", " + (obj.params.widgetH / 1.95 + obj.params.dy));
-        }
-
-    }
-
-    // title
-    obj.titleLabelObject = obj.canvas.text(obj.params.titleX, obj.params.titleY, obj.config.title);
+    // Title
+    obj.titleLabelObject = obj.paper.text(obj.params.titleX, obj.params.titleY, obj.config.title);
     obj.titleLabelObject.attr({
         "font-size": obj.params.titleFontSize,
         "font-weight": "bold",
@@ -527,7 +420,7 @@ JustGage = function(config) {
     setDy(obj.titleLabelObject, obj.params.titleFontSize, obj.params.titleY);
 
     // Value
-    obj.valueLabelObject = obj.canvas.text(obj.params.valueX, obj.params.valueY, this.config.value.toString());
+    obj.valueLabelObject = obj.paper.text(obj.params.valueX, obj.params.valueY, this.config.value.toString());
     obj.valueLabelObject.attr({
         "font-size": obj.params.valueFontSize,
         "font-weight": "bold",
@@ -538,7 +431,7 @@ JustGage = function(config) {
     setDy(obj.valueLabelObject, obj.params.valueFontSize, obj.params.valueY);
 
     // Unit label
-    obj.unitLabelObject = obj.canvas.text(obj.params.unitX, obj.params.unitY, obj.config.unit);
+    obj.unitLabelObject = obj.paper.text(obj.params.unitX, obj.params.unitY, obj.config.unit);
     obj.unitLabelObject.attr({
         "font-size": obj.params.unitFontSize,
         "font-weight": "normal",
@@ -549,7 +442,7 @@ JustGage = function(config) {
     setDy(this.unitLabelObject, this.params.unitFontSize, this.params.unitY);
 
     // Min label
-    obj.minLabelObject = obj.canvas.text(obj.params.minX, obj.params.minY, this.config.min.toString());
+    obj.minLabelObject = obj.paper.text(obj.params.minX, obj.params.minY, this.config.min.toString());
     obj.minLabelObject.attr({
         "font-size": obj.params.minFontSize,
         "font-weight": "normal",
@@ -560,7 +453,7 @@ JustGage = function(config) {
     setDy(this.minLabelObject, this.params.minFontSize, this.params.minY);
 
     // Max label
-    obj.maxLabelObject = obj.canvas.text(obj.params.maxX, obj.params.maxY, this.config.max.toString());
+    obj.maxLabelObject = obj.paper.text(obj.params.maxX, obj.params.maxY, this.config.max.toString());
     obj.maxLabelObject.attr({
         "font-size": obj.params.maxFontSize,
         "font-weight": "normal",
@@ -570,7 +463,7 @@ JustGage = function(config) {
     });
     setDy(this.maxLabelObject, this.params.maxFontSize, this.params.maxY);
 
-    var defs = obj.canvas.canvas.childNodes[1];
+    var defs = obj.paper.canvas.childNodes[1];
     var svg = "http://www.w3.org/2000/svg";
 
     if (ie !== 'undefined' && ie < 9) {
@@ -583,48 +476,15 @@ JustGage = function(config) {
         obj.generateShadow(svg, defs);
     }
 
-    // animate gauge level, value & label
-    var rvl = obj.config.value;
-    if (obj.config.reverse) {
-        rvl = (obj.config.max * 1) + (obj.config.min * 1) - (obj.config.value * 1);
-    }
-    obj.level.animate({
-        pki: [
-            rvl,
-            obj.config.min,
-            obj.config.max,
-            obj.params.widgetW,
-            obj.params.widgetH,
-            obj.params.dx,
-            obj.params.dy,
-            obj.config.gaugeWidthScale,
-            obj.config.donut,
-            obj.config.reverse
-        ]
-    }, obj.config.startAnimationTime, obj.config.startAnimationType);
-
-    if (obj.config.pointer) {
-        obj.needle.animate({
-            ndl: [
-                rvl,
-                obj.config.min,
-                obj.config.max,
-                obj.params.widgetW,
-                obj.params.widgetH,
-                obj.params.dx,
-                obj.params.dy,
-                obj.config.gaugeWidthScale,
-                obj.config.donut
-            ]
-        }, obj.config.startAnimationTime, obj.config.startAnimationType);
-    }
-
     obj.valueLabelObject.animate({
         "fill-opacity": (obj.config.hideValue) ? "0" : "1"
     }, obj.config.startAnimationTime, obj.config.startAnimationType);
     obj.unitLabelObject.animate({
         "fill-opacity": "1"
     }, obj.config.startAnimationTime, obj.config.startAnimationType);
+
+    // Initial refresh
+    this.refresh()
 };
 
 JustGage.prototype.setNewUnit = function(unit) {
@@ -683,26 +543,31 @@ JustGage.prototype.setNewValue = function(value) {
     }
 }
 
+JustGage.prototype.setBackgroundForegroundSwapped = function(value) {
+
+    // Check if value is valid and different
+    if (value !== null && this.config.backgroundForegroundSwapped !== value) {
+        this.config.backgroundForegroundSwapped = value;
+
+        this.refresh();
+    }
+}
+
 JustGage.prototype.refresh = function() {
 
     var obj = this;
     var min = this.config.min
-    var max = this.config.max;
-    var value = this.config.value;
+    var max = this.config.max
+    var value = this.config.value
 
-    // Skip refresh if invalid values
-    if (min > max) return;
+    // Let gauge starts with 0 -> Add offset to values
+    value += (min * -1)
+    max += (min * -1)
+    min += (min * -1)
 
     // Cap value to min and max
     if (value > max) value = max
     if (value < min) value = min
-
-    // Let gauge starts with 0 -> Add offset to values
-    min += (min * -1)
-    max += (min * -1)
-    value += (min * -1)
-
-    color = getColor(value, (value - min) / (max - min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors);
 
     var rvl = value;
     if (obj.config.reverse) {
@@ -721,23 +586,17 @@ JustGage.prototype.refresh = function() {
             obj.config.donut,
             obj.config.reverse
         ],
-        "fill": color
-    }, obj.config.refreshAnimationTime, obj.config.refreshAnimationType);
+    }, obj.config.animationTime, obj.config.animationType);
 
-    if (obj.config.pointer) {
-        obj.needle.animate({
-            ndl: [
-                rvl,
-                min,
-                max,
-                obj.params.widgetW,
-                obj.params.widgetH,
-                obj.params.dx,
-                obj.params.dy,
-                obj.config.gaugeWidthScale,
-                obj.config.donut
-            ]
-        }, obj.config.refreshAnimationTime, obj.config.refreshAnimationType);
+    // Set colors
+    levelColor = getColor(value, (value - min) / (max - min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors);
+    gaugeColor = obj.config.gaugeColor
+    if (obj.config.backgroundForegroundSwapped) {
+        obj.level.animate({ "fill": gaugeColor }, 0, obj.config.animationType);
+        obj.gaugeBackground.animate({ "fill": levelColor }, 0, obj.config.animationType);
+    } else {
+        obj.level.animate({ "fill": levelColor }, obj.config.animationTime, obj.config.animationType);
+        obj.gaugeBackground.animate({ "fill": gaugeColor }, 0, obj.config.animationType);
     }
 };
 
@@ -797,8 +656,8 @@ JustGage.prototype.generateShadow = function(svg, defs) {
 
     // set shadow
     if (!obj.config.hideInnerShadow) {
-        obj.canvas.canvas.childNodes[2].setAttribute("filter", "url(#" + sid + ")");
-        obj.canvas.canvas.childNodes[3].setAttribute("filter", "url(#" + sid + ")");
+        obj.paper.canvas.childNodes[2].setAttribute("filter", "url(#" + sid + ")");
+        obj.paper.canvas.childNodes[3].setAttribute("filter", "url(#" + sid + ")");
     }
 };
 
