@@ -351,6 +351,7 @@ JustGage = function(config) {
     // Gauge background
     obj.gaugeBackground = obj.paper.path().attr({
         "fill": "white",
+        "stroke-width": 0,
         pki: [
             obj.config.max,
             obj.config.min,
@@ -372,7 +373,7 @@ JustGage = function(config) {
         pki: [
             0,
             0,
-            0,
+            1,
             obj.params.widgetW,
             obj.params.widgetH,
             obj.params.dx,
@@ -389,9 +390,9 @@ JustGage = function(config) {
         "stroke-width": this.config.gaugeBorderWidth,
         "fill": "transparent",
         pki: [
-            obj.config.min,
-            obj.config.min,
-            obj.config.max,
+            1,
+            0,
+            1,
             obj.params.widgetW,
             obj.params.widgetH,
             obj.params.dx,
