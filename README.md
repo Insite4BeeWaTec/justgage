@@ -2,6 +2,9 @@ Modified and updated version of: http://justgage.com
 
 # Versions
 
+## 1.0.11
+Added raphael over NPM
+
 ## 1.0.10
 Stroke (border) options will now work!
 
