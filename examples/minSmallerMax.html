@@ -111,19 +111,19 @@
 
             var g3 = new JustGage({
                 id: 'g3',
-                value: 50,
-                min: -100,
-                max: 100,
-                humanFriendly: true,
-                gaugeWidthScale: 1.3,
+                value: -30,
+                min: 50,
+                max: -100,
+                reverse: false,
+                gaugeWidthScale: 0.6,
                 customSectors: [{
-                    color: "#ff0000",
-                    lo: 50000,
-                    hi: 100000
+                    color: '#ff0000',
+                    lo: 50,
+                    hi: 100
                 }, {
-                    color: "#00ff00",
+                    color: '#00ff00',
                     lo: 0,
-                    hi: 50000
+                    hi: 50
                 }],
                 counter: true
             });
@@ -131,8 +131,8 @@
             var g4 = new JustGage({
                 id: 'g4',
                 value: 90,
-                min: 0,
-                max: 100,
+                min: 100,
+                max: 50,
                 symbol: '%',
                 gaugeWidthScale: 0.1,
                 counter: true
@@ -141,8 +141,8 @@
             document.getElementById('gauge_refresh').addEventListener('click', function() {
                 g1.setNewValue(getRandomInt(0, 100) * (-1))
                 g2.setNewValue(getRandomInt(0, 100) * (getRandomInt(0, 1) == 0 ? (-1) : 1));
-                g2.setNewValue(getRandomInt(-100, 100));
-                g4.setNewValue(getRandomInt(-500, 100));
+                g3.setNewValue((getRandomInt(0, 150) - 50) * (-1));
+                g4.setNewValue(getRandomInt(50, 100));
             });
         });
     </script>

@@ -370,9 +370,9 @@ JustGage = function(config) {
         "stroke": this.config.levelBorderColor,
         "stroke-width": this.config.levelBorderWidth,
         pki: [
-            obj.config.min,
-            obj.config.min,
-            obj.config.max,
+            0,
+            0,
+            0,
             obj.params.widgetW,
             obj.params.widgetH,
             obj.params.dx,
@@ -389,7 +389,7 @@ JustGage = function(config) {
         "stroke-width": this.config.gaugeBorderWidth,
         "fill": "transparent",
         pki: [
-            obj.config.max,
+            obj.config.min,
             obj.config.min,
             obj.config.max,
             obj.params.widgetW,
@@ -561,9 +561,15 @@ JustGage.prototype.refresh = function() {
     var value = this.config.value
 
     // Let gauge starts with 0 -> Add offset to values
-    value += (min * -1)
-    max += (min * -1)
-    min += (min * -1)
+    value += (min * (-1))
+    max += (min * (-1))
+    min += (min * (-1))
+
+    if (max < 0) {
+        value *= (-1)
+        max *= (-1)
+        min *= (-1)
+    }
 
     // Cap value to min and max
     if (value > max) value = max
