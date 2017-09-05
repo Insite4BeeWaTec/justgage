@@ -2,6 +2,9 @@ Modified and updated version of: http://justgage.com
 
 # Versions
 
+## 1.0.13
+Added animation time for background color animation.
+
 ## 1.0.12
 Fixed gauge border color bug.
 

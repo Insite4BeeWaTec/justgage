@@ -54,12 +54,12 @@ JustGage = function(config) {
         backgroundForegroundSwapped: loadConfiguration('backgroundForegroundSwapped', config, false),
 
         // Animation (Type: https://dmitrybaranovskiy.github.io/raphael/reference.html#Raphael.easing_formulas)
-        animationTime: loadConfiguration('animationTime', config, 700),
+        animationTime: loadConfiguration('animationTime', config, 500),
         animationType: loadConfiguration('animationType', config, 'linear'),
 
         // Gauge colors
         noGradient: loadConfiguration('noGradient', config, false),
-        gaugeColor: loadConfiguration('gaugeColor', config, ["#FFFFFF"], 'array', ','),
+        gaugeColor: loadConfiguration('gaugeColor', config, "#FFFFFF"),
         levelColors: loadConfiguration('levelColors', config, ["#a9d70b", "#f9c802", "#ff0000"], 'array', ','),
         gaugeBorderColor: loadConfiguration('gaugeBorderColor', config, "#404040"),
         levelBorderColor: loadConfiguration('levelBorderColor', config, "#404040"),
@@ -350,7 +350,7 @@ JustGage = function(config) {
 
     // Gauge background
     obj.gaugeBackground = obj.paper.path().attr({
-        "fill": "white",
+        "fill": this.config.gaugeColor,
         "stroke-width": 0,
         pki: [
             obj.config.max,
@@ -599,11 +599,11 @@ JustGage.prototype.refresh = function() {
     levelColor = getColor(value, (value - min) / (max - min), obj.config.levelColors, obj.config.noGradient, obj.config.customSectors);
     gaugeColor = obj.config.gaugeColor
     if (obj.config.backgroundForegroundSwapped) {
-        obj.level.animate({ "fill": gaugeColor }, 0, obj.config.animationType);
-        obj.gaugeBackground.animate({ "fill": levelColor }, 0, obj.config.animationType);
+        obj.level.animate({ "fill": gaugeColor }, obj.config.animationTime, obj.config.animationType);
+        obj.gaugeBackground.animate({ "fill": levelColor }, obj.config.animationTime, obj.config.animationType);
     } else {
         obj.level.animate({ "fill": levelColor }, obj.config.animationTime, obj.config.animationType);
-        obj.gaugeBackground.animate({ "fill": gaugeColor }, 0, obj.config.animationType);
+        obj.gaugeBackground.animate({ "fill": gaugeColor }, obj.config.animationTime, obj.config.animationType);
     }
 };
 
