@@ -488,6 +488,17 @@ JustGage = function(config) {
     this.refresh()
 };
 
+JustGage.prototype.setNewTitle = function(title) {
+
+    // Check if value is valid and different
+    if (title !== null && this.config.title !== title && typeof title == 'string') {
+        this.config.title = title;
+
+        this.titleLabelObject.attr({ "text": title });
+        setDy(this.titleLabelObject, this.params.titleFontSize, this.params.titleY);
+    }
+}
+
 JustGage.prototype.setNewUnit = function(unit) {
 
     // Check if value is valid and different
