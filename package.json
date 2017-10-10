@@ -1,6 +1,6 @@
 {
     "name": "justgage",
-    "version": "1.0.13",
+    "version": "1.0.14",
     "description": "Fork of the JustGage-Project.",
     "main": "justgage.js",
     "scripts": {
