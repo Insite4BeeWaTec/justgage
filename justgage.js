@@ -146,8 +146,7 @@ JustGage = function(config) {
         canvasH = getStyle(document.getElementById(obj.config.id), "height").slice(0, -2) * 1;
     }
 
-    console.log(canvasW + " " + canvasH)
-        // width more than height
+    // width more than height
     if (canvasW > canvasH) {
         widgetH = canvasH;
         widgetW = widgetH * 1.25;
